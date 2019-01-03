@@ -129,11 +129,74 @@ $.getJSON("api/position", function (json) {
 $.getJSON('api/list', function (json) {
     list = JSON.parse(json).list;
 
-    BindListData();
+    drawseating()
 
     $('.draggable').draggable('disable');
 });
 
+//改用fabric
+function drawseating() {
+	var canvas = new fabric.Canvas('Seating');
+	for (var i = 0; i < list.length; i++) {
+		let count = 0
+		list[i].forEach(function (element, index) {
+			let depart = element.split('/')[0];
+			let name = element.split('/')[1];
+			let title = element.split('/')[2];
+		
+			let rect = new fabric.Rect({
+				originX: 'center',
+				originY: 'center',
+				fill: '',
+				width: 80,
+				height: 40,
+				stroke : 'black',
+				strokeWidth : 1
+			});
+
+			let text = new fabric.Text(name, {
+				fontSize: 16,
+				originX: 'center',
+				originY: 'center'
+			});
+
+			let group = new fabric.Group([ rect, text ], {
+				id: 'drag_' + i +1 + '-' + index + 1,
+				left: 50 + count * 90 ,
+				top:  50 + i * 50,
+			});
+
+			group.on('mousedown', function(e) {
+				sendNewTitle(depart + ' ' + name + '//' + title)
+			});
+
+			group.on('mouseup', function(e) {
+				positions[group.id] = 'test'
+				$.ajax
+				({
+						type: "post",
+						dataType: 'json',
+						async: true,
+						url: '/api/upload/position',
+						data: { json: JSON.stringify(positions) },
+						success: function () {
+								console.log('OK');
+						},
+						failure: function () {
+								console.log('err');
+						}
+				});
+			})
+
+			canvas.add(group);
+			count++
+		})
+	}
+	/* $("#button-array").html(list_array);
+
+	init_draggble();
+	SetPosition(); */
+}
 //劃出List
 function BindListData() {
 

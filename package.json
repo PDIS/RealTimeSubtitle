@@ -9,6 +9,7 @@
     "ejs": "^2.5.7",
     "express": "^4.15.4",
     "express-fileupload": "^0.2.0",
+    "fabric": "^2.4.6",
     "helmet": "^3.8.2",
     "jquery": "^3.2.1",
     "jquery-ui": "^1.12.1",
