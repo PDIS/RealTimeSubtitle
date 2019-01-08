@@ -11,6 +11,7 @@ let nowText = $('#title').text;
 let showStatus = $('#displaySwitch').is(':checked');
 let list = '';
 let editPosition = false;
+let canvas = new fabric.Canvas('Seating');
 
 // 接收訊息並顯示在前端畫面上
 socket.on('new title', function (json) {
@@ -120,26 +121,32 @@ var sPositions = '';
 var positions = '';
 
 $.getJSON("api/position", function (json) {
-    sPositions = json || "{}",
-        positions = JSON.parse(sPositions);
-    SetPosition();
-});
+    sPositions = json || "{}", positions = JSON.parse(sPositions);
+    /* setPosition(); */
+}) 
 
-//將匯入名單轉成按鈕，供直接點選
 $.getJSON('api/list', function (json) {
     list = JSON.parse(json).list;
 
     drawseating()
 
     $('.draggable').draggable('disable');
-});
+})
+
+//將匯入名單轉成按鈕，供直接點選
+/* $.getJSON('api/list', function (json) {
+    list = JSON.parse(json).list;
+
+    drawseating()
+
+    $('.draggable').draggable('disable');
+}); */
 
 //改用fabric
 function drawseating() {
-	var canvas = new fabric.Canvas('Seating');
 	for (var i = 0; i < list.length; i++) {
 		let count = 0
-		list[i].forEach(function (element, index) {
+		list[i].map( (element, index) =>  {
 			let depart = element.split('/')[0];
 			let name = element.split('/')[1];
 			let title = element.split('/')[2];
@@ -158,45 +165,94 @@ function drawseating() {
 				fontSize: 16,
 				originX: 'center',
 				originY: 'center'
-			});
+            });
+            
+            let groupid = 'drag_' + i + 1 + '-' + index + 1
+            let left = 50 + count * 90
+            let top =  50 + i * 50
+
+
+            if ( !positions[groupid] == undefined ) {
+                left = positions[groupid].left
+                top = positions[groupid].top
+            }
 
 			let group = new fabric.Group([ rect, text ], {
-				id: 'drag_' + i +1 + '-' + index + 1,
-				left: 50 + count * 90 ,
-				top:  50 + i * 50,
+				id: groupid,
+				left: left,
+				top:  top,
 			});
 
 			group.on('mousedown', function(e) {
-				sendNewTitle(depart + ' ' + name + '//' + title)
-			});
+				sendNewTitle(depart + ' ' + name + '/' + title)
+            });
 
-			group.on('mouseup', function(e) {
-				positions[group.id] = 'test'
+			group.on('mousemove', function(e) {
+				positions[group.id] = {'top': group.top, 'left': group.left}
 				$.ajax
 				({
-						type: "post",
-						dataType: 'json',
-						async: true,
-						url: '/api/upload/position',
-						data: { json: JSON.stringify(positions) },
-						success: function () {
-								console.log('OK');
-						},
-						failure: function () {
-								console.log('err');
-						}
+                    type: "post",
+                    dataType: 'json',
+                    async: true,
+                    url: '/api/upload/position',
+                    data: { json: JSON.stringify(positions) },
+                    success: function () {
+                            console.log('OK');
+                    },
+                    failure: function () {
+                            console.log('err');
+                    }
 				});
-			})
+            })
 
 			canvas.add(group);
 			count++
 		})
-	}
+    }
+    
+    var moveHandler = function (evt) {
+        var movingObject = evt.target;
+        let x = movingObject.left + movingObject.width / 2
+        let y = movingObject.top + movingObject.height / 2
+        for (var i = 0; i < movingObject._objects.length; i++) { 
+            positions[movingObject._objects[i].id] = {'top': y + movingObject._objects[i].top, 'left': x + movingObject._objects[i].left}
+            $.ajax
+            ({
+                type: "post",
+                dataType: 'json',
+                async: true,
+                url: '/api/upload/position',
+                data: { json: JSON.stringify(positions) },
+                success: function () {
+                        console.log('OK');
+                },
+                failure: function () {
+                        console.log('err');
+                }
+            });
+        }
+    };
+
+    canvas.on('object:moving', moveHandler);
+    //setPosition()
 	/* $("#button-array").html(list_array);
 
 	init_draggble();
 	SetPosition(); */
 }
+
+function setPosition() {
+    $.each(positions, function (id, pos) {
+        canvas._objects.map( g => {
+            if (g.id == id) {
+                g.left = pos.left
+                g.top = pos.top
+            }
+        })
+    })
+}
+
+
 //劃出List
 function BindListData() {
 
@@ -289,6 +345,15 @@ function SetPosition() {
 
     })
 
+}
+
+function SetPosition() {
+    $.each(positions, function (id, pos) {
+
+        $("#" + id).css(pos)
+        $("#" + id).css('position', 'absolute')
+
+    })
 }
 
 //建立draggble事件連結
