@@ -4,8 +4,7 @@ let webpack = require('webpack');
 module.exports = {
     entry: { app: [
     './app/main.js',
-    './app/subtitle.js',
-    './app/draw.js']
+    './app/subtitle.js']
     },
     module: {
         rules: [

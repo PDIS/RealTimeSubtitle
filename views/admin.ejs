@@ -30,6 +30,7 @@
         <li class="nav-item">
           <a class="nav-link" href="#">About</a>
         </li> -->
+
     </ul>
   </nav>
 
@@ -43,7 +44,6 @@
           </h1>
         </div>
       </div>
-
     </div>
 
     <hr>
@@ -52,7 +52,7 @@
       <div class="col-lg-4">
         <div>Dept. Display</div>
         <div class="material-switch pull-right">
-          <input id="DepartdisplaySwitch" onclick="BindListData()" name="displaySwitch" type="checkbox" <%=DepartStatus? "checked"
+          <input id="DepartdisplaySwitch" onclick="drawSeating()" name="displaySwitch" type="checkbox" <%=DepartStatus? "checked"
             : "" %>/>
           <label for="DepartdisplaySwitch" class="label-primary"></label>
         </div>
@@ -60,7 +60,7 @@
       <div class="col-lg-4">
         <div>Name Display</div>
         <div class="material-switch pull-right">
-          <input id="NamedisplaySwitch" onclick="BindListData()" name="displaySwitch" type="checkbox" <%=NameStatus? "checked" : ""
+          <input id="NamedisplaySwitch" onclick="drawSeating()" name="displaySwitch" type="checkbox" <%=NameStatus? "checked" : ""
             %>/>
           <label for="NamedisplaySwitch" class="label-primary"></label>
         </div>
@@ -68,7 +68,7 @@
       <div class="col-lg-4">
         <div>Job Display</div>
         <div class="material-switch pull-right">
-          <input id="JobdisplaySwitch" onclick="BindListData()" name="displaySwitch" type="checkbox" <%=JobStatus? "checked" : "" %>/>
+          <input id="JobdisplaySwitch" onclick="drawSeating()" name="displaySwitch" type="checkbox" <%=JobStatus? "checked" : "" %>/>
           <label for="JobdisplaySwitch" class="label-primary"></label>
         </div>
       </div>
@@ -77,20 +77,13 @@
 
     <div class="row">
       <div class="col-lg-12">
-        <button type='button' id="button_EditPosition" style='float:left;' onClick='draggableDisplay()' class='btn btn-primary '>Edit Position</button>
-
+        <!-- <button type='button' id="button_EditPosition" style='float:left;' onClick='draggableDisplay()' class='btn btn-primary '>Edit Position</button> -->
 
         <form action="/clear/position" id="clearposition" encType="multipart/form-data" method="post" style="float: right;"  >
           <input type="submit" value="Clear Position" onclick="return confirm('Are you sure to delete?')" class="btn btn-warning">
         </form>
       </div>
-
-
-
     </div>
-
-
-
 
     <link rel="stylesheet" href="stylesheets/micswitch.css">
 
@@ -108,6 +101,7 @@
       <div class="row" id="button-array">
       </div>
     </div> -->
+
     <div class="row">
       <div class="col-xs-12">
         <canvas width="1200" height="500" id="Seating" style="border:1px solid #000000;"></canvas>
@@ -142,14 +136,11 @@
 
             </div>
 
-
           </li>
         </ul>
       </div>
     </div>
 
-
-  
     <div class="row" id="FilePanel" style="padding-bottom:100px">
         <hr>
       <div class="col-lg-6">
@@ -169,8 +160,6 @@
           <input type="file" name="json" accept="json/*">
           <input type="submit" class="btn btn-danger">
         </form>
-
-
 
       </div>
 
