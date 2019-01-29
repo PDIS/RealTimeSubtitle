@@ -23,7 +23,7 @@
       <img class="img_bg" src="upload/back.png" <%= titlealign=="vertical"?"style=display:none": "style=height:92px;float:left;border-radius:50%;" %>>
      
       <div id="title" style="padding: 25px;height: auto; float: left; word-break: break-all;font-family:標楷體;">
-       <%= title %>
+       <%= title.replace(/\/\/$/,'').replace('//','/') %>
       </div>
 
     </div>

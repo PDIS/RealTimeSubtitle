@@ -127,7 +127,7 @@ module.exports = function (io) {
 
   router.post('/api/upload/position', function (req, res) {
     res.setHeader('Content-Type', 'text/plain')
-    console.log(req.body.json);
+    // console.log(req.body.json);
     var stream = fs.createWriteStream("./public/upload/position.json");
     stream.once('open', function (fd) {
       stream.write(req.body.json);
@@ -170,7 +170,7 @@ module.exports = function (io) {
     });
     socket.on('subtitle', function (data) {
       subtitlemessage = data.subtitle;
-      console.log(subtitlemessage);
+      // console.log(subtitlemessage);
       io.emit('new subtitle', { subtitle: subtitlemessage });
     });
   });

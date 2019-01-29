@@ -15,7 +15,6 @@ let canvas = new fabric.Canvas('Seating');
 var sPositions = '';
 var positions = '';
 
-sendNewTitle('');
 changeShowStatus();
 
 drawSeating();
@@ -156,7 +155,6 @@ async function drawSeating() {
                 stroke : 'black',
                 strokeWidth : 1
             });
-            console.log(buttonText)
             let text = new fabric.Text(buttonText, {
                 fontSize: 16,
                 originX: 'center',
