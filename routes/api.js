@@ -5,7 +5,9 @@ module.exports = function (io) {
   let fs = require('fs');
   let fileUpload = require('express-fileupload');
   let basicAuth = require('basic-auth');
-
+  var parse = require('csv-parse/lib/sync');
+  var async = require('async');
+  
   let message = '';
   let subtitlemessage = '';
   let showStatus = false;
@@ -118,6 +120,23 @@ module.exports = function (io) {
       // fs.writeFile('./public/upload/position.json', JSON.stringify({}),'utf-8',function(){});
       let file = req.files.json;
       handlefile(file, res, './public/upload/list.json');
+    }
+  });
+
+  router.post('/upload/csv', function (req, res) {
+    let list = { 'title':'','list': []}
+    let listarray = []
+    if (!req.files) {
+      return res.status(400).send('No files were uploaded.');
+    } else {
+      parser = parse( req.files.csv.data, { columns: true, auto_parse: true });
+      parser.map(obj => {
+        listarray.push(obj.depart + '/' + obj.name + '/' + obj.job)
+      })
+      list.list.push(listarray)
+      fs.writeFile('./public/upload/list.json',JSON.stringify(list), function() {
+          res.redirect('/');
+      })
     }
   });
 

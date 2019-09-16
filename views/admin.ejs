@@ -143,7 +143,7 @@
 
     <div class="row" id="FilePanel" style="padding-bottom:100px">
         <hr>
-      <div class="col-lg-6">
+      <div class="col-lg-4">
         <h1>Logo upload</h1>
         <a href="vTaiwanLogo.png" charset="UTF-8" target="_bland">vTaiwan Logo</a>
         <form action="/upload/image" id="upload" encType="multipart/form-data" method="post">
@@ -151,7 +151,7 @@
           <input type="submit" class="btn btn-danger">
         </form>
       </div>
-      <div class="col-lg-6">
+      <div class="col-lg-4">
         <h1>JSON upload</h1>
         <a href="example.json" charset="UTF-8" target="_bland">example</a>
         <br>
@@ -162,7 +162,17 @@
         </form>
 
       </div>
+      <div class="col-lg-4">
+        <h1>Convert xlsx</h1>
+        <a href="example.csv" charset="UTF-8" target="_bland">example</a>
+        <br>
 
+        <form action="/upload/csv" id="upload" encType="multipart/form-data" method="post" >
+          <input type="file" name="csv">
+          <input type="submit" class="btn btn-danger">
+        </form>
+
+      </div>
     </div>
     <!--<h1>List<h1>
     <div>
@@ -176,6 +186,7 @@
   </div>
   <%- include include.ejs %>
   <%# <script src="subtitle.js"></script>%>
+  <%# <script src="main.js"></script>%>
   <script>
     // create a wrapper around native canvas element (with id="c")
     /* var canvas = new fabric.Canvas('Seating'); */
