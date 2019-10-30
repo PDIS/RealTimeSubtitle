@@ -126,14 +126,21 @@ module.exports = function (io) {
   router.post('/upload/csv', function (req, res) {
     let list = { 'title':'','list': []}
     let listarray = []
+    let count = 1
     if (!req.files) {
       return res.status(400).send('No files were uploaded.');
     } else {
       parser = parse( req.files.csv.data, { columns: true, auto_parse: true });
       parser.map(obj => {
         listarray.push(obj.depart + '/' + obj.name + '/' + obj.job)
+        if (count % 12 == 0) {
+          list.list.push(listarray)
+          listarray = []
+        } else if ( count == parser.length) {
+          list.list.push(listarray)
+        }
+        count++
       })
-      list.list.push(listarray)
       fs.writeFile('./public/upload/list.json',JSON.stringify(list), function() {
           res.redirect('/');
       })
