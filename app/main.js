@@ -3,6 +3,7 @@ var io = require("socket.io-client");
 require("jquery-ui/ui/widgets/draggable");
 require("jquery-ui/ui/widgets/resizable");
 require('jquery-ui-touch-punch');
+var fabric = require('fabric').fabric;
 
 let socket = io();
 window.socket = socket;
@@ -11,6 +12,7 @@ let showStatus = $('#displaySwitch').is(':checked');
 let list = '';
 let editPosition = false;
 let canvas = new fabric.Canvas('Seating');
+let editmode = false
 
 var sPositions = '';
 var positions = '';
@@ -72,6 +74,17 @@ socket.on('new status', function (json) {
     }
 });
 
+socket.on('new editmode', function (json) {
+    editmode = json.editmode
+    if (editmode) {
+        $('.editspace').css("visibility", "visible");
+        $('.clearposition').css("visibility", "hidden");
+    } else {
+        $('.editspace').css("visibility", "hidden");
+        $('.clearposition').css("visibility", "visible");
+    }
+});
+
 // 送出訊息(訊息,顯示狀態)
 function sendNewTitle(text) {
     socket.emit('title', { title: text });
@@ -118,6 +131,11 @@ async function drawSeating() {
     var nameStatus = $("#NamedisplaySwitch").is(':checked');
     var titleStatus = $("#JobdisplaySwitch").is(':checked');
 
+    
+    await $.getJSON("api/site",  function (json) {
+        site = JSON.parse(json)   
+    });
+
     await $.getJSON("api/position",  function (json) {
         sPositions = json || "{}", positions = JSON.parse(sPositions);    
     });
@@ -129,7 +147,14 @@ async function drawSeating() {
     });
 
     canvas.clear();
-    
+
+    canvas.loadFromJSON(site, canvas.renderAll.bind(canvas),  function(o, object) {
+        object.selectable = false
+        canvas.sendBackwards(object)
+        canvas.renderAll.bind(canvas)
+    });
+
+
     for (var i = 0; i < list.length; i++) {
         let count = 0
         list[i].map( (element, index) =>  {
@@ -173,7 +198,6 @@ async function drawSeating() {
                 left: left,
                 top: top,
             });
-
             group.on('mousedown', function(e) {
                 sendNewTitle(depart + ' ' + name + '//' + title);
             });
@@ -239,6 +263,123 @@ function setPosition() {
         })
     })
 }
+
+//修改場地佈置
+function EditSpace() {
+    canvas.clear();
+    canvas.loadFromJSON(site, canvas.renderAll.bind(canvas))
+    editmode = true
+    socket.emit('editmode', {editmode: editmode})
+}
+
+window.EditSpace = EditSpace
+
+function ClearSpace() {
+    canvas.clear();
+}
+
+window.ClearSpace = ClearSpace
+
+function SaveSpace() {
+    let objects = {'objects': canvas._objects}
+    $.ajax
+    ({
+        type: "post",
+        dataType: 'json',
+        async: true,
+        url: '/api/upload/site',
+        data: { json: JSON.stringify(objects) },
+        success: function (res) {
+            drawSeating()
+            editmode = false
+            socket.emit('editmode', {editmode: editmode})
+        },
+        failure: function () {
+            console.log('err');
+        }
+    });
+}
+
+window.SaveSpace = SaveSpace
+
+function AddRectTable() {
+    let rect = new fabric.Rect({
+        originX: 'center',
+        originY: 'center',
+        fill: '',
+        width: 100,
+        height: 100,
+        stroke : 'black',
+        strokeWidth : 1
+    });
+    let text = new fabric.Text('桌子', {
+        fontSize: 24,
+        originX: 'center',
+        originY: 'center'
+    });
+    let group = new fabric.Group([ rect, text ], {
+        left: 100,
+        top: 100,
+    });
+    canvas.add(group);
+}
+
+window.AddRectTable = AddRectTable
+
+function AddCircleTable() {
+    let circle = new fabric.Circle({
+        originX: 'center',
+        originY: 'center',
+        fill: '',
+        radius: 50,
+        stroke : 'black',
+        strokeWidth : 1
+    });
+    let text = new fabric.Text('桌子', {
+        fontSize: 20,
+        originX: 'center',
+        originY: 'center'
+    });
+    let group = new fabric.Group([ circle, text ], {
+        left: 100,
+        top: 100,
+    });
+    canvas.add(group);
+}
+
+window.AddCircleTable = AddCircleTable
+
+function AddDoor() {
+    let rect = new fabric.Rect({
+        originX: 'center',
+        originY: 'center',
+        fill: '',
+        width: 100,
+        height: 200,
+        stroke : 'black',
+        strokeWidth : 1
+    });
+    let text = new fabric.Text('門', {
+        fontSize: 28,
+        originX: 'center',
+        originY: 'center'
+    });
+    let group = new fabric.Group([ rect, text ], {
+        left: 100,
+        top: 100,
+    });
+    canvas.add(group);
+}
+
+window.AddDoor = AddDoor
+
+$(document).keydown(function(event){
+    if (event.which == 46) {
+        canvas.remove(canvas.getActiveObject());
+        canvas.renderAll.bind(canvas)
+    }
+    
+});
 
 //hotkey
 $(document).keypress(function (e) {

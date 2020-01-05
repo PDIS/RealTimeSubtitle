@@ -15,6 +15,7 @@ module.exports = function (io) {
   let NamedisplaySwitch = true;
   let JobdisplaySwitch = false;
   let titlealign='';
+  let editmode = false;
 
   router.get('/site', (req, res) => {
   
@@ -76,7 +77,8 @@ module.exports = function (io) {
       title: message, status: showStatus,
       DepartStatus: DepartdisplaySwitch,
       NameStatus: NamedisplaySwitch,
-      JobStatus: JobdisplaySwitch
+      JobStatus: JobdisplaySwitch,
+      editmode: editmode
     });
   });
     
@@ -101,6 +103,15 @@ module.exports = function (io) {
     });
   });
 
+  router.get('/api/site', (req, res) => {
+    fs.readFile('./public/upload/site.json', 'utf8', (error, json)=> {
+        if (!error) {
+            res.json(json);
+        } else {
+            res.json({});
+        }
+    });
+  });
 
   router.use(fileUpload());
 
@@ -151,6 +162,16 @@ module.exports = function (io) {
       fs.writeFile('./public/upload/position.json', JSON.stringify({}),'utf-8',function(){});
   });
 
+  router.post('/api/upload/site', function (req, res) {
+    res.setHeader('Content-Type', 'text/plain')
+    var stream = fs.createWriteStream("./public/upload/site.json");
+    stream.once('open', function (fd) {
+      stream.write(req.body.json);
+      stream.end();
+      res.json({'status': 200})
+    });
+  });
+
   router.post('/api/upload/position', function (req, res) {
     res.setHeader('Content-Type', 'text/plain')
     // console.log(req.body.json);
@@ -199,6 +220,10 @@ module.exports = function (io) {
       // console.log(subtitlemessage);
       io.emit('new subtitle', { subtitle: subtitlemessage });
     });
+    socket.on('editmode', function (data) {
+      neweditmode = data.editmode
+      io.emit('new editmode', { editmode: neweditmode})
+    })
   });
   return router;
 }

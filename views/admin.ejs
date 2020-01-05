@@ -74,16 +74,30 @@
       </div>
     </div>
     <hr>
-
     <div class="row">
       <div class="col-lg-12">
-        <!-- <button type='button' id="button_EditPosition" style='float:left;' onClick='draggableDisplay()' class='btn btn-primary '>Edit Position</button> -->
+          <div style="float: left;">
+            <input type="submit" value="Edit Space" onclick="EditSpace()" class="btn btn-primary" >
+            <input type="submit" value="Rect Table" onclick="AddRectTable()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
+            <input type="submit" value="Circle Table" onclick="AddCircleTable()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
+            <input type="submit" value="Door" onclick="AddDoor()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
+            <input type="submit" value="Clear Space" onclick="ClearSpace()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
+            <input type="submit" value="Save Space" onclick="SaveSpace()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
+          </div>
+          <form action="/clear/position" id="clearposition" encType="multipart/form-data" method="post" style="float: right;"  >
+            <input type="submit" value="Clear Position" onclick="return confirm('Are you sure to delete?')" class="btn btn-warning clearposition">
+          </form>
+      </div>
+    </div>
 
-        <form action="/clear/position" id="clearposition" encType="multipart/form-data" method="post" style="float: right;"  >
+    <!-- <div class="row">
+      <div class="col-lg-12"> -->
+        <!-- <button type='button' id="button_EditPosition" style='float:left;' onClick='draggableDisplay()' class='btn btn-primary '>Edit Position</button> -->
+        <!-- <form action="/clear/position" id="clearposition" encType="multipart/form-data" method="post" style="float: right;"  >
           <input type="submit" value="Clear Position" onclick="return confirm('Are you sure to delete?')" class="btn btn-warning">
         </form>
       </div>
-    </div>
+    </div> -->
 
     <link rel="stylesheet" href="stylesheets/micswitch.css">
 
