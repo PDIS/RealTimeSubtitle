@@ -6,8 +6,9 @@
   <meta charset="UTF-8">
   <link rel="shortcut icon" href="favicon.ico" />
   <title>PDIS - Real Time Subtitle</title>
-  <link rel="stylesheet" href="stylesheets/style.css">
+  <link href="https://fonts.googleapis.com/css?family=Noto+Sans+TC|Roboto&display=swap&subset=chinese-traditional" rel="stylesheet">
   <link rel="stylesheet" href="stylesheets/bootstrap.css">
+  <link rel="stylesheet" href="stylesheets/style.css">
   <link rel="stylesheet" href="stylesheets/switch.css">
 
 </head>
@@ -34,7 +35,7 @@
     </ul>
   </nav>
 
-  <div class="container">
+  <div class="container" style="width: 95vw;">
 
     <div class="row" style="padding-top:30px;">
       <div class="col-lg-12">
@@ -81,7 +82,9 @@
             <input type="submit" value="Rect Table" onclick="AddRectTable()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
             <input type="submit" value="Circle Table" onclick="AddCircleTable()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
             <input type="submit" value="Door" onclick="AddDoor()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
-            <input type="submit" value="Clear Space" onclick="ClearSpace()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
+            <input type="submit" value="Screen" onclick="AddScreen()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
+            <input type="submit" value="Working Table" onclick="AddWorkingtable()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
+            <!-- <input type="submit" value="Clear Space" onclick="ClearSpace()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>> -->
             <input type="submit" value="Save Space" onclick="SaveSpace()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
           </div>
           <form action="/clear/position" id="clearposition" encType="multipart/form-data" method="post" style="float: right;"  >

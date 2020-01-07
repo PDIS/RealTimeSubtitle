@@ -18,7 +18,6 @@ var sPositions = '';
 var positions = '';
 
 changeShowStatus();
-
 drawSeating();
 
 // 接收訊息並顯示在前端畫面上
@@ -127,6 +126,11 @@ window.clickTitle = clickTitle;
 
 //畫出List 改用fabric
 async function drawSeating() {
+    let windowWidth = $('.row').width()
+    let windowHeight = $(window).height() - 60;
+    canvas.setHeight(windowHeight);
+    canvas.setWidth(windowWidth);
+    canvas.renderAll();
     var departStatus = $("#DepartdisplaySwitch").is(':checked');
     var nameStatus = $("#NamedisplaySwitch").is(':checked');
     var titleStatus = $("#JobdisplaySwitch").is(':checked');
@@ -148,12 +152,15 @@ async function drawSeating() {
 
     canvas.clear();
 
-    canvas.loadFromJSON(site, canvas.renderAll.bind(canvas),  function(o, object) {
-        object.selectable = false
-        canvas.sendBackwards(object)
-        canvas.renderAll.bind(canvas)
-    });
-
+    if (editmode) {
+        canvas.loadFromJSON(site, canvas.renderAll.bind(canvas))
+    } else {
+        canvas.loadFromJSON(site, canvas.renderAll.bind(canvas),  function(o, object) {
+            object.selectable = false
+            canvas.sendBackwards(object)
+            canvas.renderAll.bind(canvas)
+        });
+    }
 
     for (var i = 0; i < list.length; i++) {
         let count = 0
@@ -175,25 +182,33 @@ async function drawSeating() {
                 originX: 'center',
                 originY: 'center',
                 fill: '',
-                width: 80,
-                height: 40,
-                stroke : 'black',
-                strokeWidth : 1
+                width: 150,
+                height: 75,
+/*                 stroke : 'black',
+                strokeWidth : 1 */
             });
-            let text = new fabric.Text(buttonText, {
-                fontSize: 16,
+            let departText = new fabric.Text(depart, {
+                fontSize: 14,
+/*                 fontFamily: "Roboto, 'Noto Sans TC'", */
                 originX: 'center',
-                originY: 'center'
+                originY: 1.5
+            });
+            let nameText = new fabric.Text(buttonText, {
+                fontSize: 26,
+                fontWeight: 'bold',
+/*                 fontFamily: "Roboto, 'Noto Sans TC'", */
+                originX: 'center',
+                originY: -0.05
             });
             let groupid = 'drag_' + i + 1 + '-' + index + 1;
-            let left = 50 + count * 90;
-            let top =  50 + i * 50;
+            let left = 50 + count * 160;
+            let top =  50 + i * 80;
 
             if (positions[groupid]) {
                 left = positions[groupid].left;
                 top = positions[groupid].top;
             }
-            let group = new fabric.Group([ rect, text ], {
+            let group = new fabric.Group([ rect, departText, nameText ], {
                 id: groupid,
                 left: left,
                 top: top,
@@ -221,6 +236,7 @@ async function drawSeating() {
             });
 
             canvas.add(group);
+            
             count++;
         });
     }
@@ -249,6 +265,14 @@ async function drawSeating() {
     };
 
     canvas.on('object:moving', moveHandler);
+
+    if (editmode) {
+        canvas._objects.map( o => {
+            if (o._objects.length !== 2) {
+                o.selectable = false
+            }
+        })
+    }
 }
 window.drawSeating = drawSeating;
 
@@ -266,22 +290,31 @@ function setPosition() {
 
 //修改場地佈置
 function EditSpace() {
-    canvas.clear();
-    canvas.loadFromJSON(site, canvas.renderAll.bind(canvas))
     editmode = true
+    drawSeating()
     socket.emit('editmode', {editmode: editmode})
 }
 
 window.EditSpace = EditSpace
 
 function ClearSpace() {
-    canvas.clear();
+    canvas._objects.map( o => {
+        if (o._objects.length == 2) {
+            canvas.remove(o);
+        }
+    })
 }
 
 window.ClearSpace = ClearSpace
 
 function SaveSpace() {
-    let objects = {'objects': canvas._objects}
+    let objectArray = []
+    canvas._objects.map( o => {
+        if (o._objects.length == 2) {
+            objectArray.push(o)
+        }
+    })
+    let objects = {'objects': objectArray}
     $.ajax
     ({
         type: "post",
@@ -303,6 +336,14 @@ function SaveSpace() {
 window.SaveSpace = SaveSpace
 
 function AddRectTable() {
+    let count = 1
+    canvas._objects.map( o => {
+        if (o._objects.length == 2) {
+            if (o._objects[1].text.includes('桌子')) {
+                count++
+            }
+        }
+    })
     let rect = new fabric.Rect({
         originX: 'center',
         originY: 'center',
@@ -312,8 +353,9 @@ function AddRectTable() {
         stroke : 'black',
         strokeWidth : 1
     });
-    let text = new fabric.Text('桌子', {
+    let text = new fabric.Text('桌子' + count, {
         fontSize: 24,
+        /* fontFamily:  "Roboto, 'Noto Sans TC'" , */
         originX: 'center',
         originY: 'center'
     });
@@ -327,6 +369,14 @@ function AddRectTable() {
 window.AddRectTable = AddRectTable
 
 function AddCircleTable() {
+    let count = 1
+    canvas._objects.map( o => {
+        if (o._objects.length == 2) {
+            if (o._objects[1].text.includes('桌子')) {
+                count++
+            }
+        }
+    })
     let circle = new fabric.Circle({
         originX: 'center',
         originY: 'center',
@@ -335,7 +385,7 @@ function AddCircleTable() {
         stroke : 'black',
         strokeWidth : 1
     });
-    let text = new fabric.Text('桌子', {
+    let text = new fabric.Text('桌子' + count, {
         fontSize: 20,
         originX: 'center',
         originY: 'center'
@@ -354,13 +404,13 @@ function AddDoor() {
         originX: 'center',
         originY: 'center',
         fill: '',
-        width: 100,
-        height: 200,
+        width: 75,
+        height: 75,
         stroke : 'black',
         strokeWidth : 1
     });
     let text = new fabric.Text('門', {
-        fontSize: 28,
+        fontSize: 16,
         originX: 'center',
         originY: 'center'
     });
@@ -372,6 +422,54 @@ function AddDoor() {
 }
 
 window.AddDoor = AddDoor
+
+function AddScreen() {
+    let rect = new fabric.Rect({
+        originX: 'center',
+        originY: 'center',
+        fill: '',
+        width: 200,
+        height: 100,
+        stroke : 'black',
+        strokeWidth : 1
+    });
+    let text = new fabric.Text('投影幕', {
+        fontSize: 24,
+        originX: 'center',
+        originY: 'center'
+    });
+    let group = new fabric.Group([ rect, text ], {
+        left: 100,
+        top: 100,
+    });
+    canvas.add(group);
+}
+
+window.AddScreen = AddScreen
+
+function AddWorkingtable() {
+    let rect = new fabric.Rect({
+        originX: 'center',
+        originY: 'center',
+        fill: '',
+        width: 200,
+        height: 100,
+        stroke : 'black',
+        strokeWidth : 1
+    });
+    let text = new fabric.Text('工作桌', {
+        fontSize: 24,
+        originX: 'center',
+        originY: 'center'
+    });
+    let group = new fabric.Group([ rect, text ], {
+        left: 100,
+        top: 100,
+    });
+    canvas.add(group);
+}
+
+window.AddWorkingtable = AddWorkingtable
 
 $(document).keydown(function(event){
     if (event.which == 46) {

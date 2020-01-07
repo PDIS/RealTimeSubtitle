@@ -144,7 +144,7 @@ module.exports = function (io) {
       parser = parse( req.files.csv.data, { columns: true, auto_parse: true });
       parser.map(obj => {
         listarray.push(obj.depart + '/' + obj.name + '/' + obj.job)
-        if (count % 12 == 0) {
+        if (count % 7 == 0) {
           list.list.push(listarray)
           listarray = []
         } else if ( count == parser.length) {
