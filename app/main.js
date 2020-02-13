@@ -4,6 +4,7 @@ require("jquery-ui/ui/widgets/draggable");
 require("jquery-ui/ui/widgets/resizable");
 require('jquery-ui-touch-punch');
 var fabric = require('fabric').fabric;
+var jsPDF = require('jspdf');
 
 let socket = io();
 window.socket = socket;
@@ -11,8 +12,11 @@ let nowText = $('#title').text;
 let showStatus = $('#displaySwitch').is(':checked');
 let list = '';
 let editPosition = false;
-let canvas = new fabric.Canvas('Seating');
+let canvas = new fabric.Canvas('Seating', {
+    imageSmoothingEnabled: false
+});
 let editmode = false
+let angle = 0
 
 var sPositions = '';
 var positions = '';
@@ -76,11 +80,11 @@ socket.on('new status', function (json) {
 socket.on('new editmode', function (json) {
     editmode = json.editmode
     if (editmode) {
-        $('.editspace').css("visibility", "visible");
-        $('.clearposition').css("visibility", "hidden");
+        $('.editspace').css("display", "inline");
+        $('.clearposition').css("display", "none");
     } else {
-        $('.editspace').css("visibility", "hidden");
-        $('.clearposition').css("visibility", "visible");
+        $('.editspace').css("display", "none");
+        $('.clearposition').css("display", "inline");
     }
 });
 
@@ -127,21 +131,21 @@ window.clickTitle = clickTitle;
 //畫出List 改用fabric
 async function drawSeating() {
     let windowWidth = $('.row').width()
-    let windowHeight = $(window).height() - 60;
-    canvas.setHeight(windowHeight);
-    canvas.setWidth(windowWidth);
+    let windowHeight = $(window).height() - 200;
+/*     canvas.setHeight(windowHeight); */
+/*     canvas.setWidth(windowWidth); */
     canvas.renderAll();
     var departStatus = $("#DepartdisplaySwitch").is(':checked');
     var nameStatus = $("#NamedisplaySwitch").is(':checked');
     var titleStatus = $("#JobdisplaySwitch").is(':checked');
 
-    
-    await $.getJSON("api/site",  function (json) {
-        site = JSON.parse(json)   
+
+    await $.getJSON("api/site", function (json) {
+        site = JSON.parse(json)
     });
 
-    await $.getJSON("api/position",  function (json) {
-        sPositions = json || "{}", positions = JSON.parse(sPositions);    
+    await $.getJSON("api/position", function (json) {
+        sPositions = json || "{}", positions = JSON.parse(sPositions);
     });
 
     //將匯入名單轉成按鈕，供直接點選
@@ -149,13 +153,15 @@ async function drawSeating() {
         list = JSON.parse(json).list;
         $('.draggable').draggable('disable');
     });
-
+    canvas.off('object:scaling')
+    canvas.off('object:scaled')
+    canvas.off('object:moved')
     canvas.clear();
 
     if (editmode) {
         canvas.loadFromJSON(site, canvas.renderAll.bind(canvas))
     } else {
-        canvas.loadFromJSON(site, canvas.renderAll.bind(canvas),  function(o, object) {
+        canvas.loadFromJSON(site, canvas.renderAll.bind(canvas), function (o, object) {
             object.selectable = false
             canvas.sendBackwards(object)
             canvas.renderAll.bind(canvas)
@@ -164,122 +170,163 @@ async function drawSeating() {
 
     for (var i = 0; i < list.length; i++) {
         let count = 0
-        list[i].map( (element, index) =>  {
+        list[i].map((element, index) => {
             let depart = element.split('/')[0];
             let name = element.split('/')[1];
             let title = element.split('/')[2];
             var buttonText = '';
-            if (departStatus && depart != null && depart != '') {
-                buttonText += depart;
-            }
-            if (nameStatus && name != null && name != '') {
-                buttonText += ' ' + name;
-            }
-            if (titleStatus && title != null && title != '') {
-                buttonText += '/' + title;
-            }            
+            /*             if (departStatus && depart != null && depart != '') {
+                            buttonText += depart;
+                        }
+                        if (nameStatus && name != null && name != '') {
+                            buttonText += ' ' + name;
+                        }
+                        if (titleStatus && title != null && title != '') {
+                            buttonText += '/' + title;
+                        }  */
+            buttonText += ' ' + name;
             let rect = new fabric.Rect({
                 originX: 'center',
                 originY: 'center',
                 fill: '',
-                width: 150,
+                width: 10,
                 height: 75,
-/*                 stroke : 'black',
-                strokeWidth : 1 */
+                /*                 stroke : 'black',
+                                strokeWidth : 1 */
             });
             let departText = new fabric.Text(depart, {
-                fontSize: 14,
-/*                 fontFamily: "Roboto, 'Noto Sans TC'", */
+                fontSize: 12,
+                fontFamily: "Roboto, 'Noto Sans TC'",
                 originX: 'center',
-                originY: 1.5
+                originY: 1.5,
             });
             let nameText = new fabric.Text(buttonText, {
-                fontSize: 26,
-                fontWeight: 'bold',
-/*                 fontFamily: "Roboto, 'Noto Sans TC'", */
+                fontSize: 18,
+                fontFamily: "Roboto, 'Noto Sans TC'",
                 originX: 'center',
                 originY: -0.05
             });
             let groupid = 'drag_' + i + 1 + '-' + index + 1;
-            let left = 50 + count * 160;
-            let top =  50 + i * 80;
+            let left = 50 + count * 130;
+            let top = 50 + i * 70;
 
             if (positions[groupid]) {
                 left = positions[groupid].left;
                 top = positions[groupid].top;
             }
-            let group = new fabric.Group([ rect, departText, nameText ], {
+            let group = new fabric.Group([rect, departText, nameText], {
                 id: groupid,
                 left: left,
                 top: top,
+                originX: 'center',
+                originY: 'center',
             });
-            group.on('mousedown', function(e) {
+            group.on('mousedown', function (e) {
                 sendNewTitle(depart + ' ' + name + '//' + title);
             });
 
-            group.on('mousemove', function(e) {
-                positions[group.id] = {'top': group.top, 'left': group.left};
+            group.on('moved', function (e) {
+                positions[group.id] = { 'top': group.top, 'left': group.left };
                 $.ajax
-                ({
-                    type: "post",
-                    dataType: 'json',
-                    async: true,
-                    url: '/api/upload/position',
-                    data: { json: JSON.stringify(positions) },
-                    success: function () {
-                        console.log('OK');
-                    },
-                    failure: function () {
-                        console.log('err');
-                    }
-                });
+                    ({
+                        type: "post",
+                        dataType: 'json',
+                        async: true,
+                        url: '/api/upload/position',
+                        data: { json: JSON.stringify(positions) },
+                        success: function () {
+                            console.log('OK');
+                        },
+                        failure: function () {
+                            console.log('err');
+                        }
+                    });
             });
 
             canvas.add(group);
-            
+
             count++;
         });
     }
-    
+
     var moveHandler = function (evt) {
         var movingObject = evt.target;
-        let x = movingObject.left + movingObject.width / 2;
-        let y = movingObject.top + movingObject.height / 2;
-        for (var i = 0; i < movingObject._objects.length; i++) { 
-            positions[movingObject._objects[i].id] = {'top': y + movingObject._objects[i].top, 'left': x + movingObject._objects[i].left};
-            $.ajax
-            ({
-                type: "post",
-                dataType: 'json',
-                async: true,
-                url: '/api/upload/position',
-                data: { json: JSON.stringify(positions) },
-                success: function () {
-                    console.log('OK');
-                },
-                failure: function () {
-                    console.log('err');
+            let x = movingObject.left + movingObject.width / 2;
+            let y = movingObject.top + movingObject.height / 2;
+            for (var i = 0; i < movingObject._objects.length; i++) {
+                if (movingObject._objects[i].id !== undefined) {
+                positions[movingObject._objects[i].id] = { 'top': y + movingObject._objects[i].top, 'left': x + movingObject._objects[i].left };
+                $.ajax
+                    ({
+                        type: "post",
+                        dataType: 'json',
+                        async: true,
+                        url: '/api/upload/position',
+                        data: { json: JSON.stringify(positions) },
+                        success: function () {
+                            console.log('OK');
+                        },
+                        failure: function () {
+                            console.log('err');
+                        }
+                    });
                 }
-            });
         }
     };
 
-    canvas.on('object:moving', moveHandler);
+    canvas.on('object:moved', moveHandler);
+    canvas.on({
+        'object:scaling': function (e) {
+            if (e.target._objects.length === 2) {
+                var obj = e.target,
+                w = obj.width * obj.scaleX,
+                h = obj.height * obj.scaleY,
+                s = obj.strokeWidth;
+                obj._objects[0].set({
+                    'height': obj.height,
+                    'width': obj.width,
+                    'scaleX': 1,
+                    'scaleY': 1,
+                    h: h,
+                    w: w
+                });
+            }
+        }
+    });
+    canvas.on({
+        'object:scaled': function (e) {
+            if (e.target._objects.length === 2) {
+                group = e.target
+
+                rect = e.target._objects[0]
+                text = group._objects[1]
+                rect.set({ height: rect.h, width: rect.w })
+                canvas.remove(group)
+                canvas.add(new fabric.Group([rect, text], {
+                    top: group.top,
+                    left: group.left
+                }))
+            }
+        }
+
+    });
+    
 
     if (editmode) {
-        canvas._objects.map( o => {
+        canvas._objects.map(o => {
             if (o._objects.length !== 2) {
                 o.selectable = false
             }
         })
     }
+
 }
 window.drawSeating = drawSeating;
 
 //設定各位置 不含指標位置
 function setPosition() {
     $.each(positions, function (id, pos) {
-        canvas._objects.map( g => {
+        canvas._objects.map(g => {
             if (g.id == id) {
                 g.left = pos.left;
                 g.top = pos.top;
@@ -288,17 +335,29 @@ function setPosition() {
     })
 }
 
+function Rotate() {
+    angle += 90
+    canvas._objects.map(o => {
+        if (o._objects.length !== 2) {
+            o.set('angle', angle)
+        }
+    })
+    canvas.renderAll()
+}
+
+window.Rotate = Rotate;
+
 //修改場地佈置
 function EditSpace() {
     editmode = true
     drawSeating()
-    socket.emit('editmode', {editmode: editmode})
+    socket.emit('editmode', { editmode: editmode })
 }
 
 window.EditSpace = EditSpace
 
 function ClearSpace() {
-    canvas._objects.map( o => {
+    canvas._objects.map(o => {
         if (o._objects.length == 2) {
             canvas.remove(o);
         }
@@ -309,35 +368,35 @@ window.ClearSpace = ClearSpace
 
 function SaveSpace() {
     let objectArray = []
-    canvas._objects.map( o => {
+    canvas._objects.map(o => {
         if (o._objects.length == 2) {
             objectArray.push(o)
         }
     })
-    let objects = {'objects': objectArray}
+    let objects = { 'objects': objectArray }
     $.ajax
-    ({
-        type: "post",
-        dataType: 'json',
-        async: true,
-        url: '/api/upload/site',
-        data: { json: JSON.stringify(objects) },
-        success: function (res) {
-            drawSeating()
-            editmode = false
-            socket.emit('editmode', {editmode: editmode})
-        },
-        failure: function () {
-            console.log('err');
-        }
-    });
+        ({
+            type: "post",
+            dataType: 'json',
+            async: true,
+            url: '/api/upload/site',
+            data: { json: JSON.stringify(objects) },
+            success: function (res) {
+                drawSeating()
+                editmode = false
+                socket.emit('editmode', { editmode: editmode })
+            },
+            failure: function () {
+                console.log('err');
+            }
+        });
 }
 
 window.SaveSpace = SaveSpace
 
 function AddRectTable() {
     let count = 1
-    canvas._objects.map( o => {
+    canvas._objects.map(o => {
         if (o._objects.length == 2) {
             if (o._objects[1].text.includes('桌子')) {
                 count++
@@ -350,8 +409,8 @@ function AddRectTable() {
         fill: '',
         width: 100,
         height: 100,
-        stroke : 'black',
-        strokeWidth : 1
+        stroke: 'black',
+        strokeWidth: 1
     });
     let text = new fabric.Text('桌子' + count, {
         fontSize: 24,
@@ -359,10 +418,43 @@ function AddRectTable() {
         originX: 'center',
         originY: 'center'
     });
-    let group = new fabric.Group([ rect, text ], {
+    let group = new fabric.Group([rect, text], {
         left: 100,
         top: 100,
     });
+    /* group.on({
+        'scaling': function (e) {
+            console.log(e)
+
+            var obj = e.target,
+                w = obj.width * obj.scaleX,
+                h = obj.height * obj.scaleY,
+                s = obj.strokeWidth;
+            obj._objects[0].set({
+                'height': obj.height,
+                'width': obj.width,
+                'scaleX': 1,
+                'scaleY': 1,
+                h: h,
+                w: w
+            });
+
+        }
+    });
+    group.on({
+        'scaled': function (e) {
+            group = e.target
+            rect = e.target._objects[0]
+            rect.set({ height: rect.h, width: rect.w })
+            text = group._objects[1]
+            canvas.remove(group)
+            canvas.add(new fabric.Group([rect, text], {
+                top: group.top,
+                left: group.left
+            }))
+        }
+
+    }); */
     canvas.add(group);
 }
 
@@ -370,7 +462,7 @@ window.AddRectTable = AddRectTable
 
 function AddCircleTable() {
     let count = 1
-    canvas._objects.map( o => {
+    canvas._objects.map(o => {
         if (o._objects.length == 2) {
             if (o._objects[1].text.includes('桌子')) {
                 count++
@@ -382,15 +474,15 @@ function AddCircleTable() {
         originY: 'center',
         fill: '',
         radius: 50,
-        stroke : 'black',
-        strokeWidth : 1
+        stroke: 'black',
+        strokeWidth: 1
     });
     let text = new fabric.Text('桌子' + count, {
         fontSize: 20,
         originX: 'center',
         originY: 'center'
     });
-    let group = new fabric.Group([ circle, text ], {
+    let group = new fabric.Group([circle, text], {
         left: 100,
         top: 100,
     });
@@ -406,18 +498,50 @@ function AddDoor() {
         fill: '',
         width: 75,
         height: 75,
-        stroke : 'black',
-        strokeWidth : 1
+        stroke: 'black',
+        strokeWidth: 1
     });
     let text = new fabric.Text('門', {
         fontSize: 16,
         originX: 'center',
         originY: 'center'
     });
-    let group = new fabric.Group([ rect, text ], {
+    let group = new fabric.Group([rect, text], {
         left: 100,
         top: 100,
     });
+    /* group.on({
+        'scaling': function (e) {
+
+            var obj = e.target,
+                w = obj.width * obj.scaleX,
+                h = obj.height * obj.scaleY,
+                s = obj.strokeWidth;
+            obj._objects[0].set({
+                'height': obj.height,
+                'width': obj.width,
+                'scaleX': 1,
+                'scaleY': 1,
+                h: h,
+                w: w
+            });
+
+        }
+    });
+    group.on({
+        'scaled': function (e) {
+            group = e.target
+            rect = e.target._objects[0]
+            rect.set({ height: rect.h, width: rect.w })
+            text = group._objects[1]
+            canvas.remove(group)
+            canvas.add(new fabric.Group([rect, text], {
+                top: group.top,
+                left: group.left
+            }))
+        }
+
+    }); */
     canvas.add(group);
 }
 
@@ -430,18 +554,50 @@ function AddScreen() {
         fill: '',
         width: 200,
         height: 100,
-        stroke : 'black',
-        strokeWidth : 1
+        stroke: 'black',
+        strokeWidth: 1
     });
     let text = new fabric.Text('投影幕', {
         fontSize: 24,
         originX: 'center',
         originY: 'center'
     });
-    let group = new fabric.Group([ rect, text ], {
+    let group = new fabric.Group([rect, text], {
         left: 100,
         top: 100,
     });
+    /* group.on({
+        'scaling': function (e) {
+
+            var obj = e.target,
+                w = obj.width * obj.scaleX,
+                h = obj.height * obj.scaleY,
+                s = obj.strokeWidth;
+            obj._objects[0].set({
+                'height': obj.height,
+                'width': obj.width,
+                'scaleX': 1,
+                'scaleY': 1,
+                h: h,
+                w: w
+            });
+
+        }
+    });
+    group.on({
+        'scaled': function (e) {
+            group = e.target
+            rect = e.target._objects[0]
+            rect.set({ height: rect.h, width: rect.w })
+            text = group._objects[1]
+            canvas.remove(group)
+            canvas.add(new fabric.Group([rect, text], {
+                top: group.top,
+                left: group.left
+            }))
+        }
+
+    }); */
     canvas.add(group);
 }
 
@@ -454,29 +610,81 @@ function AddWorkingtable() {
         fill: '',
         width: 200,
         height: 100,
-        stroke : 'black',
-        strokeWidth : 1
+        stroke: 'black',
+        strokeWidth: 1
     });
     let text = new fabric.Text('工作桌', {
         fontSize: 24,
         originX: 'center',
         originY: 'center'
     });
-    let group = new fabric.Group([ rect, text ], {
+    let group = new fabric.Group([rect, text], {
         left: 100,
         top: 100,
     });
+    /* group.on({
+        'scaling': function (e) {
+            var obj = e.target,
+                w = obj.width * obj.scaleX,
+                h = obj.height * obj.scaleY,
+                s = obj.strokeWidth;
+            obj._objects[0].set({
+                'height': obj.height,
+                'width': obj.width,
+                'scaleX': 1,
+                'scaleY': 1,
+                h: h,
+                w: w
+            });
+
+        }
+    });
+    group.on({
+        'scaled': function (e) {
+            group = e.target
+            rect = e.target._objects[0]
+            rect.set({ height: rect.h, width: rect.w })
+            text = group._objects[1]
+            canvas.remove(group)
+            canvas.add(new fabric.Group([rect, text], {
+                top: group.top,
+                left: group.left
+            }))
+        }
+
+    }); */
     canvas.add(group);
 }
 
 window.AddWorkingtable = AddWorkingtable
 
-$(document).keydown(function(event){
+function ExportJPG() {
+
+}
+
+window.ExportJPG = ExportJPG
+
+function ExportPDF() {
+    $.getJSON("api/title", function (json) {
+        title = JSON.parse(json).title
+        var pdf = new jsPDF('l', 'px', [canvas.width, canvas.height]);
+/*         pdf.text('Hello world!', 10, 10) */
+        let image = canvas.toDataURL("image/png");
+        width = pdf.internal.pageSize.getWidth();
+        height = pdf.internal.pageSize.getHeight();
+        pdf.addImage(image, 'JPEG', 0, 0, width, height);
+        pdf.save('座位圖.pdf');
+    });
+}
+
+window.ExportPDF = ExportPDF
+
+$(document).keydown(function (event) {
     if (event.which == 46) {
         canvas.remove(canvas.getActiveObject());
         canvas.renderAll.bind(canvas)
     }
-    
+
 });
 
 //hotkey

@@ -113,6 +113,16 @@ module.exports = function (io) {
     });
   });
 
+  router.get('/api/title', (req, res) => {
+    fs.readFile('./public/upload/list.json', 'utf8', (error, json)=> {
+        if (!error) {
+            res.json(json);
+        } else {
+            res.json({});
+        }
+    });
+  });
+
   router.use(fileUpload());
 
   router.post('/upload/image', function (req, res) {
@@ -141,10 +151,11 @@ module.exports = function (io) {
     if (!req.files) {
       return res.status(400).send('No files were uploaded.');
     } else {
+      list.title = req.files.csv.name.replace('.csv', '')
       parser = parse( req.files.csv.data, { columns: true, auto_parse: true });
       parser.map(obj => {
         listarray.push(obj.depart + '/' + obj.name + '/' + obj.job)
-        if (count % 7 == 0) {
+        if (count % 8 == 0) {
           list.list.push(listarray)
           listarray = []
         } else if ( count == parser.length) {

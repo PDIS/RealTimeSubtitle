@@ -35,7 +35,7 @@
     </ul>
   </nav>
 
-  <div class="container" style="width: 95vw;">
+  <div class="container">
 
     <div class="row" style="padding-top:30px;">
       <div class="col-lg-12">
@@ -49,7 +49,7 @@
 
     <hr>
 
-    <div class="row">
+ <!--    <div class="row">
       <div class="col-lg-4">
         <div>Dept. Display</div>
         <div class="material-switch pull-right">
@@ -74,18 +74,21 @@
         </div>
       </div>
     </div>
-    <hr>
+    <hr> -->
     <div class="row">
       <div class="col-lg-12">
           <div style="float: left;">
             <input type="submit" value="Edit Space" onclick="EditSpace()" class="btn btn-primary" >
-            <input type="submit" value="Rect Table" onclick="AddRectTable()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
-            <input type="submit" value="Circle Table" onclick="AddCircleTable()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
-            <input type="submit" value="Door" onclick="AddDoor()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
-            <input type="submit" value="Screen" onclick="AddScreen()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
-            <input type="submit" value="Working Table" onclick="AddWorkingtable()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
-            <!-- <input type="submit" value="Clear Space" onclick="ClearSpace()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>> -->
-            <input type="submit" value="Save Space" onclick="SaveSpace()" class="btn btn-primary editspace"  <%=editmode? 'style=visibility:visible;' : 'style=visibility:hidden;' %>>
+            <input type="submit" value="Table" onclick="AddRectTable()" class="btn btn-primary editspace"  <%=editmode? 'style=display:inline;' : 'style=display:none;' %>>
+            <!-- <input type="submit" value="Circle Table" onclick="AddCircleTable()" class="btn btn-primary editspace"  <%=editmode? 'style=display:inline;' : 'style=display:none;' %>> -->
+            <input type="submit" value="Door" onclick="AddDoor()" class="btn btn-primary editspace"  <%=editmode? 'style=display:inline;' : 'style=display:none;' %>>
+            <input type="submit" value="Screen" onclick="AddScreen()" class="btn btn-primary editspace"  <%=editmode? 'style=display:inline;' : 'style=display:none;' %>>
+            <input type="submit" value="Working Table" onclick="AddWorkingtable()" class="btn btn-primary editspace"  <%=editmode? 'style=display:inline;' : 'style=display:none;' %>>
+            <!-- <input type="submit" value="Clear Space" onclick="ClearSpace()" class="btn btn-primary editspace"  <%=editmode? 'style=display:inline;' : 'style=display:none;' %>> -->
+            <input type="submit" value="Save Space" onclick="SaveSpace()" class="btn btn-primary editspace"  <%=editmode? 'style=display:inline;' : 'style=display:none;' %>>
+<!--             <input type="submit" value="Export to JPG" onclick="ExportJPG()" class="btn btn-primary" > -->
+            <input type="submit" value="Rotate" onclick="Rotate()" class="btn btn-primary" >
+            <input type="submit" value="Export to PDF" onclick="ExportPDF()" class="btn btn-primary" >
           </div>
           <form action="/clear/position" id="clearposition" encType="multipart/form-data" method="post" style="float: right;"  >
             <input type="submit" value="Clear Position" onclick="return confirm('Are you sure to delete?')" class="btn btn-warning clearposition">
@@ -121,7 +124,7 @@
 
     <div class="row">
       <div class="col-xs-12">
-        <canvas width="1200" height="500" id="Seating" style="border:1px solid #000000;"></canvas>
+        <canvas width="1200" height="750" id="Seating" style="border:1px solid #000000;"></canvas>
       </div>
     </div>
     <!-- 錄音開關 -->
@@ -133,7 +136,7 @@
       </div>
     </div>
 
-    <div class="row" style=" top:65px;left: -25px; position: fixed;">
+    <div class="row" style="top:0vh; left: -3vw; position: fixed;">
       <div class="col-lg-12 ">
         <ul>
           <li class="list-group-item" id="display_Switch">
